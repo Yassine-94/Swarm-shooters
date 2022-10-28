@@ -97,13 +97,12 @@ class Slave_Bot():
     def distance_calculation(self,w,h):
         #Regression linéaire avec les données dans le data.csv
         distance_estim = 58.5446 + 0.5136*w - 1.2978*h
-        # size_px_init = 60
-        # distance_init = 20
+
         print("#",int(w))
         spkr = Sound()
         spkr.speak('Distance calculated !')
         spkr.speak(str(distance_estim))
-        # return (size_px_init*distance_init)/w
+
         return distance_estim
 
 
@@ -155,10 +154,7 @@ class Slave_Bot():
 
 
 def set_font(name):
-    '''Sets the console font
 
-    A full list of fonts can be found with `ls /usr/share/consolefonts`
-    '''
     os.system('setfont ' + name)
 
 
@@ -177,14 +173,6 @@ def main():
     # bot.receive_distance()
 
 
-    """
-    ev3.speaker.beep(frequency=1000, duration=500)
-    ev3.speaker.beep(frequency=800, duration=200)
-    ev3.speaker.beep(frequency=1000, duration=500)
-    ev3.speaker.beep(frequency=800, duration=200)
-    """
-
-    #ev3.speaker.beep()
 
 if __name__ == "__main__" :
     main()
