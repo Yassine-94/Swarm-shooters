@@ -11,7 +11,7 @@ from threading import Thread
 class Master_Bot():
     def __init__(self):
         
-        self.hostMACAddress = '172.24.12.207' # The MAC address of a Bluetooth adapter on the server. The server might have multiple Bluetooth adapters.
+        self.hostMACAddress = '169.254.116.31' # The MAC address of a Bluetooth adapter on the server. The server might have multiple Bluetooth adapters.
         self.port = 1050 # 3 is an arbitrary choice. However, it must match the port used by the client.
         self.backlog = 1
         self.size = 1024
@@ -38,4 +38,3 @@ class Master_Bot():
 bot = Master_Bot()
 bot.server_connection()
 bot.receive_distance()
-
