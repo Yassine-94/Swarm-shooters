@@ -34,7 +34,7 @@ class Slave_Bot():
 
         self.x = self.position.x
         self.y = self.position.y
-        # self.serverMACAddress = '172.24.12.207'
+        # self.serverMACAddress = '169.254.116.31'
         # self.port = 1050
         # self.s = socket.socket()
         # print("A")
@@ -52,38 +52,44 @@ class Slave_Bot():
 
     def forward(self):
         if self.loop == True:
-            self.position.move(left=-100, right=-100, time=6)
+            self.position.move(left=-150, right=-150, time=15)
     def forward_low(self):
         if self.loop == True:
             self.position.move(left=-100, right=-100, time=5)        
  
     def turn_right_180(self):
         if self.loop == True:
-            self.position.move(left=-100, right=0, time=4)
+            self.position.move(left=-95, right=0, time=5)
 
     def turn_left_180(self):
         if self.loop == True:
             self.position.move(left=0, right=-100, time=4)
 
-    def moving_pattern(self):        
+    def moving_pattern(self):
         
         #c'est ici qu'on va créer le pattern à l'aide de la fonction move de odemetrium en gardant la position connu
         while self.loop:
 
             # self.position.move(left=-100, right=-100, time=5)
-            self.forward()
-            self.turn_right_180()
-            self.forward()
-            self.turn_right_180()
-            self.forward()
-            self.turn_left_180()
-            # self.position.move(left=-100, right=0, time=4)
-            # self.position.move(left=-100, right=-100, time=5)
-            # self.position.move(left=-100, right=0, time=4)
-            # self.position.move(left=-100, right=-100, time=5)
-            # self.position.move(left=0, right=-100, time=4)
+            # self.forward()
+            # self.turn_right_180()
+            # self.forward_low()
+            # self.turn_right_180()
+            # self.forward()
+            # self.turn_left_180()
+            # self.forward_low()
+            # self.turn_left_180()
 
-            pos = self.get_position()
+           self.forward()
+           self.turn_right_180()
+           self.forward()
+           self.turn_right_180()
+           self.forward()
+           self.turn_right_180()
+           self.forward()
+           self.turn_right_180()
+
+            # pos = self.get_position()
             # print(pos)
 
         #on prend les information x, y et l'orientation qu'on va renvoyer en sortie de la fonction
@@ -97,12 +103,13 @@ class Slave_Bot():
     def distance_calculation(self,w,h):
         #Regression linéaire avec les données dans le data.csv
         distance_estim = 58.5446 + 0.5136*w - 1.2978*h
-
+        # size_px_init = 60
+        # distance_init = 20
         print("#",int(w))
         spkr = Sound()
         spkr.speak('Distance calculated !')
         spkr.speak(str(distance_estim))
-
+        # return (size_px_init*distance_init)/w
         return distance_estim
 
 
@@ -154,7 +161,10 @@ class Slave_Bot():
 
 
 def set_font(name):
+    '''Sets the console font
 
+    A full list of fonts can be found with `ls /usr/share/consolefonts`
+    '''
     os.system('setfont ' + name)
 
 
@@ -173,6 +183,14 @@ def main():
     # bot.receive_distance()
 
 
+    """
+    ev3.speaker.beep(frequency=1000, duration=500)
+    ev3.speaker.beep(frequency=800, duration=200)
+    ev3.speaker.beep(frequency=1000, duration=500)
+    ev3.speaker.beep(frequency=800, duration=200)
+    """
+
+    #ev3.speaker.beep()
 
 if __name__ == "__main__" :
     main()
