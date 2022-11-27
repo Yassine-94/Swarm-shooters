@@ -19,6 +19,7 @@ import time
 import socket
 from odometrium.main import Odometrium
 from smbus import SMBus
+import ev3dev.ev3 as ev3
 # from main_master import Master_Bot
 
 
@@ -30,11 +31,14 @@ class Slave_Bot():
                       curve_adjustment=1)
         self.x = self.position.x
         self.y = self.position.y
-        self.serverAddress = '169.254.162.114'
+
+        self.serverAddress = '169.254.148.173'
         self.port = 1050
+        self.size = 1024
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        #self.s.connect((self.serverAddress,self.port))
+        self.s.connect((self.serverAddress,self.port))
         self.orientation = self.position.orientation
+        self.shooting_part = ev3.LargeMotor('outC')
         self.loop = True
         
 
@@ -62,14 +66,15 @@ class Slave_Bot():
     def moving_pattern(self):
         #c'est ici qu'on va créer le pattern à l'aide de la fonction move de odemetrium en gardant la position connu
         while self.loop:
-           self.forward()
-           self.turn_right_180()
-           self.forward()
-           self.turn_right_180()
-           self.forward()
-           self.turn_right_180()
-           self.forward()
-           self.turn_right_180()
+            print('l')
+        #    self.forward()
+        #    self.turn_right_180()
+        #    self.forward()
+        #    self.turn_right_180()
+        #    self.forward()
+        #    self.turn_right_180()
+        #    self.forward()
+        #    self.turn_right_180()
  
             # pos = self.get_position()
             # print(pos)
@@ -105,31 +110,33 @@ class Slave_Bot():
         while True:
            
             # Request block
-            bus.write_i2c_block_data(address, 0, data)
-            # Read block
-            block = bus.read_i2c_block_data(address, 0, 20)
+            # bus.write_i2c_block_data(address, 0, data)
+            # # Read block
+            # block = bus.read_i2c_block_data(address, 0, 20)
             distance= '11'
             data = distance.encode("utf8")
-            self.s.sendall(data)
-            if block[6]==2:
-                print("dedans")
-                # Extract data
-                sig = block[7]*256 + block[6]
-                x = block[9]*256 + block[8]
-                y = block[11]*256 + block[10]
-                w = block[13]*256 + block[12]
-                h = block[15]*256 + block[14]
-                spkr = Sound()
-                self.loop = False
-                self.position.stop()
-                pos = self.get_position()
-                spkr.speak('Target detected !')
+            self.s.send(data)
+            self.shooting()
+            break
+            # if block[6]==2:
+            #     print("dedans")
+            #     # Extract data
+            #     sig = block[7]*256 + block[6]
+            #     x = block[9]*256 + block[8]
+            #     y = block[11]*256 + block[10]
+            #     w = block[13]*256 + block[12]
+            #     h = block[15]*256 + block[14]
+            #     spkr = Sound()
+            #     self.loop = False
+            #     self.position.stop()
+            #     pos = self.get_position()
+            #     spkr.speak('Target detected !')
 
-                dis = self.distance_calculation(w,h)
-                print("distance :", dis)
-                data = dis.encode("utf8")
-                self.s.sendall(data)
-                break
+            #     dis = self.distance_calculation(w,h)
+            #     print("distance :", dis)
+            #     data = dis.encode("utf8")
+            #     self.s.sendall(data)
+            #     break
                 # print("largeur :", w)
                 # print("hauteur :", h)
                 # self.s.send(int(dis))
@@ -148,6 +155,14 @@ class Slave_Bot():
         data = spk.encode("utf8")
         socket.sendall(data)'''
 
+    def shooting(self):
+        time.sleep(5000)
+        data_shooting = self.s.recv(self.size)
+        if data_shooting :
+            self.shooting_part.run_timed(time_sp=5 * 1000, speed_sp=200)
+
+
+
 
 def set_font(name):
     '''Sets the console font
@@ -158,14 +173,15 @@ def set_font(name):
 def main():
     '''The main function of our program'''
     set_font('Lat15-Terminus24x12')
-    # moteur
+
     bot = Slave_Bot()
     print("lolo")
     t = Thread(target=bot.moving_pattern)
     t.start()
     print("lili")
     bot.pixy_camera()
-    bot.send_data()
+
+
     # bot = Master_Bot()
     # bot.server_connection()
     # bot.receive_distance()
