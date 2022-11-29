@@ -1,18 +1,9 @@
 #!/usr/bin/env python3
 
-
-# from pybricks.hubs import EV3Brick
-# from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
-#                                  InfraredSensor, UltrasonicSensor, GyroSensor)
-# from pybricks.parameters import Port, Stop, Direction, Button, Color
-# from pybricks.tools import wait, StopWatch, DataLog
-# from pybricks.robotics import DriveBase
-# from pybricks.media.ev3dev import SoundFile, ImageFile
-from ev3dev2.sensor import Sensor, INPUT_1
+from ev3dev2.sensor import Sensor, INPUT_1, INPUT_2
 from ev3dev2.port import LegoPort
 from ev3dev2.sound import Sound
 from threading import Thread
-# from pybricks.messaging import BluetoothMailboxServer, TextMailbox
 import os
 import sys
 import time
@@ -32,7 +23,7 @@ class Slave_Bot():
         self.x = self.position.x
         self.y = self.position.y
 
-        self.serverAddress = '169.254.148.173'
+        self.serverAddress = '169.254.2.221'
         self.port = 1050
         self.size = 1024
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -49,7 +40,7 @@ class Slave_Bot():
     # fonction pour avancer
     def forward(self):
         if self.loop == True:
-            self.position.move(left=-200, right=-200, time=15)
+            self.position.move(left=-150, right=-150, time=14)
     # fonction pour avancer moins vite
     def forward_low(self):
         if self.loop == True:
@@ -57,7 +48,7 @@ class Slave_Bot():
     # fonction pour tourner à droite      
     def turn_right_180(self):
         if self.loop == True:
-            self.position.move(left=-100, right=0, time=4)
+            self.position.move(left=-95, right=0, time=5)
     # fonction pour tourner à gauche
     def turn_left_180(self):
         if self.loop == True:
@@ -66,15 +57,15 @@ class Slave_Bot():
     def moving_pattern(self):
         #c'est ici qu'on va créer le pattern à l'aide de la fonction move de odemetrium en gardant la position connu
         while self.loop:
-            print('l')
-        #    self.forward()
-        #    self.turn_right_180()
-        #    self.forward()
-        #    self.turn_right_180()
-        #    self.forward()
-        #    self.turn_right_180()
-        #    self.forward()
-        #    self.turn_right_180()
+            
+            self.forward()
+            self.turn_right_180()
+            self.forward()
+            self.turn_right_180()
+            self.forward()
+            self.turn_right_180()
+            self.forward()
+            self.turn_right_180()
  
             # pos = self.get_position()
             # print(pos)
@@ -96,50 +87,53 @@ class Slave_Bot():
         return distance_estim
 
     def pixy_camera(self):
-        print("lalalalala")
         in1 = LegoPort(INPUT_1)
         in1.mode = 'other-i2c'
         # Short wait for the port to get ready
         time.sleep(0.5)
         bus = SMBus(3)
         address = 0x54
-        sigs = 2
+        sigs = 1
         # Data for requesting block
         data = [174, 193, 32, 2, sigs, 1]
         # Read and display data until TouchSensor is pressed
         while True:
            
             # Request block
-            # bus.write_i2c_block_data(address, 0, data)
+            bus.write_i2c_block_data(address, 0, data)
             # # Read block
-            # block = bus.read_i2c_block_data(address, 0, 20)
-            distance= '11'
-            data = distance.encode("utf8")
-            self.s.send(data)
-            self.shooting()
-            break
-            # if block[6]==2:
-            #     print("dedans")
-            #     # Extract data
-            #     sig = block[7]*256 + block[6]
-            #     x = block[9]*256 + block[8]
-            #     y = block[11]*256 + block[10]
-            #     w = block[13]*256 + block[12]
-            #     h = block[15]*256 + block[14]
-            #     spkr = Sound()
-            #     self.loop = False
-            #     self.position.stop()
-            #     pos = self.get_position()
-            #     spkr.speak('Target detected !')
+            block = bus.read_i2c_block_data(address, 0, 20)
+            print("block 6 = ",block[6], "block 7 = ", block[7])
+            time.sleep(3)
+            # distance= '11'
+            # data = distance.encode("utf8")
+            # self.s.send(data)
+            # self.shooting()
+            # break
+            if block[6]==1:
+                print("dedans")
+                # Extract data
+                sig = block[7]*256 + block[6]
+                x = block[9]*256 + block[8]
+                y = block[11]*256 + block[10]
+                w = block[13]*256 + block[12]
+                h = block[15]*256 + block[14]
+                spkr = Sound()
+                self.loop = False
+                self.position.stop()
+                pos = self.get_position()
+                spkr.speak('Target detected !')
 
-            #     dis = self.distance_calculation(w,h)
-            #     print("distance :", dis)
-            #     data = dis.encode("utf8")
-            #     self.s.sendall(data)
-            #     break
-                # print("largeur :", w)
-                # print("hauteur :", h)
-                # self.s.send(int(dis))
+                dis = self.distance_calculation(w,h)
+                print("distance :", dis)
+                print("largeur :", w)
+                print("hauteur :", h)
+                dis = int(dis)
+                dis = str(dis)
+                data = dis.encode("utf8")
+                self.s.send(data)
+                self.shooting()
+                break
                 
                 #insert here call of function distance with x,y,w,h and pos inputs 
 
@@ -156,10 +150,25 @@ class Slave_Bot():
         socket.sendall(data)'''
 
     def shooting(self):
-        time.sleep(5000)
-        data_shooting = self.s.recv(self.size)
-        if data_shooting :
-            self.shooting_part.run_timed(time_sp=5 * 1000, speed_sp=200)
+        # time.sleep(5000)
+        while 1:
+            data_shooting1 = self.s.recv(self.size)
+            data_shooting = data_shooting1.decode('utf8')
+            print("detected")
+            if data_shooting is not None:
+                spk = Sound()
+                spk.speak('I received it !')        
+                self.shooting_part.run_timed(time_sp=5 * 1000, speed_sp=200)
+                time.sleep(2)
+                self.shooting_part.run_timed(time_sp=3 * 1000, speed_sp=-200)
+                time.sleep(2)
+                self.shooting_part.run_timed(time_sp=5 * 1000, speed_sp=200)
+                time.sleep(2)
+                self.shooting_part.run_timed(time_sp=3 * 1000, speed_sp=-200)
+                
+                break
+        
+
 
 
 
@@ -175,10 +184,8 @@ def main():
     set_font('Lat15-Terminus24x12')
 
     bot = Slave_Bot()
-    print("lolo")
     t = Thread(target=bot.moving_pattern)
     t.start()
-    print("lili")
     bot.pixy_camera()
 
 
