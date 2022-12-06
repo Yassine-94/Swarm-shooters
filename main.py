@@ -158,13 +158,13 @@ class Slave_Bot():
             if data_shooting is not None:
                 spk = Sound()
                 spk.speak('Order received !')        
-                self.shooting_part.run_timed(time_sp=5 * 1000, speed_sp=400)
+                self.shooting_part.run_timed(time_sp=5 * 1000, speed_sp=500)
                 time.sleep(1)
-                self.shooting_part.run_timed(time_sp=3 * 1000, speed_sp=-400)
+                self.shooting_part.run_timed(time_sp=3 * 1000, speed_sp=-500)
                 time.sleep(1)
-                self.shooting_part.run_timed(time_sp=5 * 1000, speed_sp=400)
+                self.shooting_part.run_timed(time_sp=5 * 1000, speed_sp=500)
                 time.sleep(1)
-                self.shooting_part.run_timed(time_sp=3 * 1000, speed_sp=-400)
+                self.shooting_part.run_timed(time_sp=3 * 1000, speed_sp=-500)
                 
                 break
         
