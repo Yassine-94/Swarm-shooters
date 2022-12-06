@@ -23,7 +23,7 @@ class Slave_Bot():
         self.x = self.position.x
         self.y = self.position.y
 
-        self.serverAddress = '169.254.2.221'
+        self.serverAddress = '169.254.204.132'
         self.port = 1050
         self.size = 1024
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -48,16 +48,15 @@ class Slave_Bot():
     # fonction pour tourner à droite      
     def turn_right_180(self):
         if self.loop == True:
-            self.position.move(left=-95, right=0, time=5)
+            self.position.move(left=-95, right=95, time=2)
     # fonction pour tourner à gauche
     def turn_left_180(self):
         if self.loop == True:
-            self.position.move(left=0, right=-100, time=4)
+            self.position.move(left=100, right=-100, time=2)
 
     def moving_pattern(self):
         #c'est ici qu'on va créer le pattern à l'aide de la fonction move de odemetrium en gardant la position connu
         while self.loop:
-            
             self.forward()
             self.turn_right_180()
             self.forward()
@@ -74,9 +73,9 @@ class Slave_Bot():
     def get_position(self):
         return self.x,self.y,self.orientation
 
-    def distance_calculation(self,w,h):
+    def distance_calculation(self,w):
         #Regression linéaire avec les données dans le data.csv
-        distance_estim = 58.5446 + 0.5136*w - 1.2978*h
+        distance_estim = 3.9687 + (1194.9260/w)
         # size_px_init = 60
         # distance_init = 20
         print("#",int(w))
@@ -99,12 +98,13 @@ class Slave_Bot():
         # Read and display data until TouchSensor is pressed
         while True:
            
+            time.sleep(3)
             # Request block
             bus.write_i2c_block_data(address, 0, data)
             # # Read block
             block = bus.read_i2c_block_data(address, 0, 20)
             print("block 6 = ",block[6], "block 7 = ", block[7])
-            time.sleep(3)
+            
             # distance= '11'
             # data = distance.encode("utf8")
             # self.s.send(data)
@@ -124,10 +124,10 @@ class Slave_Bot():
                 pos = self.get_position()
                 spkr.speak('Target detected !')
 
-                dis = self.distance_calculation(w,h)
+                dis = self.distance_calculation(w)
                 print("distance :", dis)
                 print("largeur :", w)
-                print("hauteur :", h)
+                # print("hauteur :", h)
                 dis = int(dis)
                 dis = str(dis)
                 data = dis.encode("utf8")
@@ -157,21 +157,17 @@ class Slave_Bot():
             print("detected")
             if data_shooting is not None:
                 spk = Sound()
-                spk.speak('I received it !')        
-                self.shooting_part.run_timed(time_sp=5 * 1000, speed_sp=200)
-                time.sleep(2)
-                self.shooting_part.run_timed(time_sp=3 * 1000, speed_sp=-200)
-                time.sleep(2)
-                self.shooting_part.run_timed(time_sp=5 * 1000, speed_sp=200)
-                time.sleep(2)
-                self.shooting_part.run_timed(time_sp=3 * 1000, speed_sp=-200)
+                spk.speak('Order received !')        
+                self.shooting_part.run_timed(time_sp=5 * 1000, speed_sp=400)
+                time.sleep(1)
+                self.shooting_part.run_timed(time_sp=3 * 1000, speed_sp=-400)
+                time.sleep(1)
+                self.shooting_part.run_timed(time_sp=5 * 1000, speed_sp=400)
+                time.sleep(1)
+                self.shooting_part.run_timed(time_sp=3 * 1000, speed_sp=-400)
                 
                 break
         
-
-
-
-
 
 def set_font(name):
     '''Sets the console font
@@ -187,7 +183,6 @@ def main():
     t = Thread(target=bot.moving_pattern)
     t.start()
     bot.pixy_camera()
-
 
     # bot = Master_Bot()
     # bot.server_connection()
