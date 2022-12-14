@@ -23,13 +23,15 @@ class Slave_Bot():
         self.x = self.position.x
         self.y = self.position.y
 
-        self.serverAddress = '169.254.204.132'
+        self.serverAddress = '169.254.137.211'
         self.port = 1050
         self.size = 1024
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((self.serverAddress,self.port))
         self.orientation = self.position.orientation
         self.shooting_part = ev3.LargeMotor('outC')
+        self.shooting_part_right = ev3.LargeMotor('outD')
+        self.shooting_part_left = ev3.LargeMotor('outA')
         self.loop = True
         
 
@@ -48,7 +50,7 @@ class Slave_Bot():
     # fonction pour tourner à droite      
     def turn_right_180(self):
         if self.loop == True:
-            self.position.move(left=-95, right=95, time=2)
+            self.position.move(left=-96, right=96, time=2)
     # fonction pour tourner à gauche
     def turn_left_180(self):
         if self.loop == True:
@@ -73,17 +75,17 @@ class Slave_Bot():
     def get_position(self):
         return self.x,self.y,self.orientation
 
-    def distance_calculation(self,w):
-        #Regression linéaire avec les données dans le data.csv
-        distance_estim = 3.9687 + (1194.9260/w)
-        # size_px_init = 60
-        # distance_init = 20
-        print("#",int(w))
-        spkr = Sound()
-        spkr.speak('Distance calculated !')
-        spkr.speak(int(distance_estim))
-        # return (size_px_init*distance_init)/w
-        return distance_estim
+    # def distance_calculation(self,w):
+    #     #Regression linéaire avec les données dans le data.csv
+    #     distance_estim = 3.9687 + (1194.9260/w)
+    #     # size_px_init = 60
+    #     # distance_init = 20
+    #     print("#",int(w))
+    #     spkr = Sound()
+    #     spkr.speak('Distance calculated !')
+    #     spkr.speak(int(distance_estim))
+    #     # return (size_px_init*distance_init)/w
+    #     return distance_estim
 
     def pixy_camera(self):
         in1 = LegoPort(INPUT_1)
@@ -98,18 +100,13 @@ class Slave_Bot():
         # Read and display data until TouchSensor is pressed
         while True:
            
-            time.sleep(3)
+            time.sleep(1)
             # Request block
             bus.write_i2c_block_data(address, 0, data)
             # # Read block
             block = bus.read_i2c_block_data(address, 0, 20)
             print("block 6 = ",block[6], "block 7 = ", block[7])
             
-            # distance= '11'
-            # data = distance.encode("utf8")
-            # self.s.send(data)
-            # self.shooting()
-            # break
             if block[6]==1:
                 print("dedans")
                 # Extract data
@@ -118,22 +115,36 @@ class Slave_Bot():
                 y = block[11]*256 + block[10]
                 w = block[13]*256 + block[12]
                 h = block[15]*256 + block[14]
-                spkr = Sound()
-                self.loop = False
-                self.position.stop()
-                pos = self.get_position()
-                spkr.speak('Target detected !')
+                if x < 140:
+                    self.loop = False
+                    self.position.stop()
+                    self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=40)
+                    self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=-40)
+                elif x > 156:
+                    self.loop = False
+                    self.position.stop()
+                    self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=-40)
+                    self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=40)
+                else:
 
-                dis = self.distance_calculation(w)
-                print("distance :", dis)
-                print("largeur :", w)
-                # print("hauteur :", h)
-                dis = int(dis)
-                dis = str(dis)
-                data = dis.encode("utf8")
-                self.s.send(data)
-                self.shooting()
-                break
+                    spkr = Sound()
+                    self.loop = False
+                    self.position.stop()
+                    pos = self.get_position()
+                    spkr.speak('Target detected !')
+
+                    # dis = self.distance_calculation(w)
+                    # print("distance :", dis)
+                    print("largeur :", w)
+                    dis = w
+                    # print("hauteur :", h)
+                    dis = int(dis)
+                    dis = str(dis)
+                    data1 = dis.encode("utf8")
+                    self.s.send(data1)
+                    self.shooting()
+
+                    self.loop = True
                 
                 #insert here call of function distance with x,y,w,h and pos inputs 
 
@@ -152,8 +163,8 @@ class Slave_Bot():
     def shooting(self):
         # time.sleep(5000)
         while 1:
-            data_shooting1 = self.s.recv(self.size)
-            data_shooting = data_shooting1.decode('utf8')
+            data_shooting = self.s.recv(self.size)
+            data_shooting = data_shooting.decode('utf8')
             print("detected")
             if data_shooting is not None:
                 spk = Sound()
@@ -165,6 +176,7 @@ class Slave_Bot():
                 self.shooting_part.run_timed(time_sp=5 * 1000, speed_sp=500)
                 time.sleep(1)
                 self.shooting_part.run_timed(time_sp=3 * 1000, speed_sp=-500)
+                data_shooting = None
                 
                 break
         
