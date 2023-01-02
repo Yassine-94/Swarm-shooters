@@ -73,6 +73,5 @@ class Master_Bot():
 
 
 bot = Master_Bot()
-#bot.sound()
 bot.server_connection()
 bot.receive_distance()
