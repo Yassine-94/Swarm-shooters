@@ -11,7 +11,6 @@ import socket
 from odometrium.main import Odometrium
 from smbus import SMBus
 import ev3dev.ev3 as ev3
-# from main_master import Master_Bot
 
 
 #Faire une classe Slave Robot en prenant toutes les fonction du dessous
@@ -195,10 +194,6 @@ def main():
     t = Thread(target=bot.moving_pattern)
     t.start()
     bot.pixy_camera()
-
-    # bot = Master_Bot()
-    # bot.server_connection()
-    # bot.receive_distance()
 
 if __name__ == "__main__" :
     main()
