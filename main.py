@@ -3,6 +3,7 @@
 from ev3dev2.sensor import Sensor, INPUT_1, INPUT_2
 from ev3dev2.port import LegoPort
 from ev3dev2.sound import Sound
+from sys import stderr
 from threading import Thread
 import os
 import sys
@@ -11,6 +12,7 @@ import socket
 from odometrium.main import Odometrium
 from smbus import SMBus
 import ev3dev.ev3 as ev3
+
 
 
 #Faire une classe Slave Robot en prenant toutes les fonction du dessous
@@ -22,8 +24,8 @@ class Slave_Bot():
         self.x = self.position.x
         self.y = self.position.y
 
-        self.serverAddress = '169.254.137.211'
-        self.port = 1050
+        self.serverAddress = '169.254.44.100'
+        self.port = 1051
         self.size = 1024
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((self.serverAddress,self.port))
@@ -31,7 +33,13 @@ class Slave_Bot():
         self.shooting_part = ev3.LargeMotor('outC')
         self.shooting_part_right = ev3.LargeMotor('outD')
         self.shooting_part_left = ev3.LargeMotor('outA')
+        self.elevation_part = ev3.LargeMotor('outB')
         self.loop = True
+        self.flag = False
+        self.A = False
+        self.B = False
+        self.C = False
+        self.D = False
         
 
     # def server_connection(self):
@@ -58,17 +66,40 @@ class Slave_Bot():
     def moving_pattern(self):
         #c'est ici qu'on va créer le pattern à l'aide de la fonction move de odemetrium en gardant la position connu
         while self.loop:
+            print(self.position.x , file = stderr)
+            print(self.position.y , file = stderr) 
+            time.sleep(5)
             self.forward()
             self.turn_right_180()
+            print(self.position.x , file = stderr)
+            print(self.position.y , file = stderr)
+            time.sleep(5)
             self.forward()
             self.turn_right_180()
+            print(self.position.x , file = stderr)
+            print(self.position.y , file = stderr)
+            time.sleep(5)
             self.forward()
             self.turn_right_180()
+            print(self.position.x , file = stderr)
+            print(self.position.y , file = stderr)
+            time.sleep(5)
             self.forward()
             self.turn_right_180()
- 
+
+        print("En dehors du moving loop")
             # pos = self.get_position()
             # print(pos)
+
+    # def odometry_pattern(self):
+    #     if self.A:
+    #         continue
+    #     if self.B:
+    #         continue
+    #     if self.C:
+    #         continue
+    #     if self.D:
+    #         continue
 
     #on prend les information x, y et l'orientation qu'on va renvoyer en sortie de la fonction    
     def get_position(self):
@@ -104,46 +135,66 @@ class Slave_Bot():
             bus.write_i2c_block_data(address, 0, data)
             # # Read block
             block = bus.read_i2c_block_data(address, 0, 20)
-            print("block 6 = ",block[6], "block 7 = ", block[7])
+            # print("block 6 = ",block[6], "block 7 = ", block[7])
             
             if block[6]==1:
-                print("dedans")
+                # print("dedans")
                 # Extract data
                 sig = block[7]*256 + block[6]
                 x = block[9]*256 + block[8]
                 y = block[11]*256 + block[10]
                 w = block[13]*256 + block[12]
                 h = block[15]*256 + block[14]
-                if x < 140:
+
+                if y < 95:
                     self.loop = False
                     self.position.stop()
-                    self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=40)
-                    self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=-40)
-                elif x > 156:
+                    self.elevation_part.run_timed(time_sp=1 * 1000, speed_sp=20)
+                    
+                elif y > 104:
                     self.loop = False
                     self.position.stop()
-                    self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=-40)
-                    self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=40)
+                    self.elevation_part.run_timed(time_sp=1 * 1000, speed_sp=-20)
+                    
                 else:
 
-                    spkr = Sound()
-                    self.loop = False
-                    self.position.stop()
-                    pos = self.get_position()
-                    spkr.speak('Target detected !')
+                    if x < 140:
+                        self.loop = False
+                        self.position.stop()
+                        self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=40)
+                        self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=-40)
+                    elif x > 156:
+                        self.loop = False
+                        self.position.stop()
+                        self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=-40)
+                        self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=40)
+                    else:
 
-                    # dis = self.distance_calculation(w)
-                    # print("distance :", dis)
-                    print("largeur :", w)
-                    dis = w
-                    # print("hauteur :", h)
-                    dis = int(dis)
-                    dis = str(dis)
-                    data1 = dis.encode("utf8")
-                    self.s.send(data1)
-                    self.shooting()
+                        spkr = Sound()
+                        self.loop = False
+                        self.position.stop()
+                        pos = self.get_position()
+                        spkr.speak('Target detected !')
+                        spkr.speak('Error calibration !')
+                        self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=40)
+                        self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=-40)
 
-                    self.loop = True
+                        self.elevation_part.run_timed(time_sp=1 * 1000, speed_sp=20)
+                        # dis = self.distance_calculation(w)
+                        # print("distance :", dis)
+                        print("largeur :", w)
+                        dis = w
+                        # print("hauteur :", h)
+                        dis = int(dis)
+                        dis = str(dis)
+                        data1 = dis.encode("utf8")
+                        self.s.send(data1)
+                        self.shooting()
+
+                        self.loop = True
+
+                        break
+                        
                 
                 #insert here call of function distance with x,y,w,h and pos inputs 
 
@@ -193,7 +244,10 @@ def main():
     bot = Slave_Bot()
     t = Thread(target=bot.moving_pattern)
     t.start()
-    bot.pixy_camera()
+    while True:
+        bot.pixy_camera()
+        time.sleep(3)
+
 
 if __name__ == "__main__" :
     main()
