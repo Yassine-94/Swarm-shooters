@@ -4,15 +4,14 @@ import sys
 import time
 import socket
 from ev3dev2.sound import Sound
-
 from threading import Thread
 
 
 #Faire une classe Slave Robot en prenant toutes les fonction du dessous
 class Master_Bot():
     def __init__(self):
-        self.hostAddress = '169.254.44.100' # The MAC address of a Bluetooth adapter on the server. The server might have multiple Bluetooth adapters.
-        self.port = 1051 # 3 is an arbitrary choice. However, it must match the port used by the client.
+        self.hostAddress = '169.254.160.214' # The MAC address of a Bluetooth adapter on the server. The server might have multiple Bluetooth adapters.
+        self.port = 1052 # 3 is an arbitrary choice. However, it must match the port used by the client.
         self.backlog = 1
         self.size = 1024
 
@@ -30,8 +29,8 @@ class Master_Bot():
         # distance_init = 20
         print("#",int(w))
         spkr = Sound()
-        spkr.speak('Distance calculated !')
-        spkr.speak(int(distance_estim))
+        # spkr.speak('Distance calculated !')
+        # spkr.speak(int(distance_estim))
         # return (size_px_init*distance_init)/w
         return distance_estim
 
@@ -43,7 +42,7 @@ class Master_Bot():
             if data:
                 print(data)
                 spkr = Sound()
-                spkr.speak('Target detected')
+                # spkr.speak('Target detected')
                 # spkr.speak('Distance calculated')
                 data = data.decode('utf8')
                 data = int(data)
@@ -57,7 +56,7 @@ class Master_Bot():
                 # print("hauteur :", h)
                 dis = int(dis)
                 dis = str(dis)
-                spkr.speak('You can shoot !')
+                # spkr.speak('You can shoot !')
                 data_shoot = dis.encode("utf8")
                 print(data_shoot)
                 self.connexion_client.send(data_shoot)
@@ -68,9 +67,6 @@ class Master_Bot():
                 # finally:
                 #     print("No EZrror")
                 self.receive_distance()
-    
-
-
 
 bot = Master_Bot()
 bot.server_connection()

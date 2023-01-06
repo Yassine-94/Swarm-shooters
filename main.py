@@ -24,8 +24,8 @@ class Slave_Bot():
         self.x = self.position.x
         self.y = self.position.y
 
-        self.serverAddress = '169.254.44.100'
-        self.port = 1051
+        self.serverAddress = '169.254.160.214'
+        self.port = 1052
         self.size = 1024
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((self.serverAddress,self.port))
@@ -57,13 +57,14 @@ class Slave_Bot():
     # fonction pour tourner à droite      
     def turn_right_180(self):
         if self.loop == True:
-            self.position.move(left=-96, right=96, time=2)
+            self.position.move(left=-96, right=96, time=2)  
     # fonction pour tourner à gauche
     def turn_left_180(self):
         if self.loop == True:
             self.position.move(left=100, right=-100, time=2)
 
     def moving_pattern(self):
+        compteur = 0
         #c'est ici qu'on va créer le pattern à l'aide de la fonction move de odemetrium en gardant la position connu
         while self.loop:
             print(self.position.x , file = stderr)
@@ -87,7 +88,17 @@ class Slave_Bot():
             self.forward()
             self.turn_right_180()
 
-        print("En dehors du moving loop")
+        while self.loop==False:
+            global block
+            if block[6]==1:
+                compteur = 0
+            if block[6]!=1:
+                compteur += 1            
+            if compteur > 3:
+                self.loop=True
+                self.moving_pattern()
+            print("En dehors du moving loop", file = stderr)
+
             # pos = self.get_position()
             # print(pos)
 
@@ -129,11 +140,11 @@ class Slave_Bot():
         data = [174, 193, 32, 2, sigs, 1]
         # Read and display data until TouchSensor is pressed
         while True:
-           
             time.sleep(1)
             # Request block
             bus.write_i2c_block_data(address, 0, data)
             # # Read block
+            global block
             block = bus.read_i2c_block_data(address, 0, 20)
             # print("block 6 = ",block[6], "block 7 = ", block[7])
             
@@ -157,32 +168,32 @@ class Slave_Bot():
                     self.elevation_part.run_timed(time_sp=1 * 1000, speed_sp=-20)
                     
                 else:
-
                     if x < 140:
                         self.loop = False
                         self.position.stop()
                         self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=40)
                         self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=-40)
+
                     elif x > 156:
                         self.loop = False
                         self.position.stop()
                         self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=-40)
                         self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=40)
-                    else:
 
+                    else:
                         spkr = Sound()
                         self.loop = False
                         self.position.stop()
                         pos = self.get_position()
-                        spkr.speak('Target detected !')
-                        spkr.speak('Error calibration !')
+                        # spkr.speak('Target detected !')
+                        # spkr.speak('Error calibration !')
                         self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=40)
                         self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=-40)
 
                         self.elevation_part.run_timed(time_sp=1 * 1000, speed_sp=20)
                         # dis = self.distance_calculation(w)
                         # print("distance :", dis)
-                        print("largeur :", w)
+                        # print("largeur :", w)
                         dis = w
                         # print("hauteur :", h)
                         dis = int(dis)
@@ -191,9 +202,9 @@ class Slave_Bot():
                         self.s.send(data1)
                         self.shooting()
 
-                        self.loop = True
+                        # self.loop = True
 
-                        break
+                        
                         
                 
                 #insert here call of function distance with x,y,w,h and pos inputs 
@@ -216,18 +227,18 @@ class Slave_Bot():
             data_shooting = self.s.recv(self.size)
             data_shooting = data_shooting.decode('utf8')
             print("detected")
+            
             if data_shooting is not None:
                 spk = Sound()
-                spk.speak('Order received !')        
-                self.shooting_part.run_timed(time_sp=5 * 1000, speed_sp=500)
+                # spk.speak('Order received !')        
+                self.shooting_part.run_timed(time_sp=3 * 1000, speed_sp=300)
                 time.sleep(1)
-                self.shooting_part.run_timed(time_sp=3 * 1000, speed_sp=-500)
+                self.shooting_part.run_timed(time_sp=3 * 1000, speed_sp=-300)
                 time.sleep(1)
-                self.shooting_part.run_timed(time_sp=5 * 1000, speed_sp=500)
+                self.shooting_part.run_timed(time_sp=3 * 1000, speed_sp=300)
                 time.sleep(1)
-                self.shooting_part.run_timed(time_sp=3 * 1000, speed_sp=-500)
+                self.shooting_part.run_timed(time_sp=3 * 1000, speed_sp=-300)
                 data_shooting = None
-                
                 break
         
 
