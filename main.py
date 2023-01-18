@@ -24,8 +24,8 @@ class Slave_Bot():
         self.x = self.position.x
         self.y = self.position.y
 
-        self.serverAddress = '169.254.160.214'
-        self.port = 1052
+        self.serverAddress = '169.254.79.197'
+        self.port = 1053
         self.size = 1024
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((self.serverAddress,self.port))
@@ -40,11 +40,8 @@ class Slave_Bot():
         self.B = False
         self.C = False
         self.D = False
+        self.elev_pos = 0
         
-
-    # def server_connection(self):
-    #     server = BluetoothMailboxServer()
-    #     server.wait_for_connection()
 
     # fonction pour avancer
     def forward(self):
@@ -57,7 +54,7 @@ class Slave_Bot():
     # fonction pour tourner à droite      
     def turn_right_180(self):
         if self.loop == True:
-            self.position.move(left=-96, right=96, time=2)  
+            self.position.move(left=-100, right=100, time=2)  
     # fonction pour tourner à gauche
     def turn_left_180(self):
         if self.loop == True:
@@ -67,24 +64,24 @@ class Slave_Bot():
         compteur = 0
         #c'est ici qu'on va créer le pattern à l'aide de la fonction move de odemetrium en gardant la position connu
         while self.loop:
-            print(self.position.x , file = stderr)
-            print(self.position.y , file = stderr) 
-            time.sleep(5)
+            # print(self.position.x , file = stderr)
+            # print(self.position.y , file = stderr) 
+            time.sleep(1)
             self.forward()
             self.turn_right_180()
-            print(self.position.x , file = stderr)
-            print(self.position.y , file = stderr)
-            time.sleep(5)
+            # print(self.position.x , file = stderr)
+            # print(self.position.y , file = stderr)
+            time.sleep(1)
             self.forward()
             self.turn_right_180()
-            print(self.position.x , file = stderr)
-            print(self.position.y , file = stderr)
-            time.sleep(5)
+            # print(self.position.x , file = stderr)
+            # print(self.position.y , file = stderr)
+            time.sleep(1)
             self.forward()
             self.turn_right_180()
-            print(self.position.x , file = stderr)
-            print(self.position.y , file = stderr)
-            time.sleep(5)
+            # print(self.position.x , file = stderr)
+            # print(self.position.y , file = stderr)
+            time.sleep(1)
             self.forward()
             self.turn_right_180()
 
@@ -97,7 +94,7 @@ class Slave_Bot():
             if compteur > 3:
                 self.loop=True
                 self.moving_pattern()
-            print("En dehors du moving loop", file = stderr)
+            # print("En dehors du moving loop", file = stderr)
 
             # pos = self.get_position()
             # print(pos)
@@ -115,6 +112,13 @@ class Slave_Bot():
     #on prend les information x, y et l'orientation qu'on va renvoyer en sortie de la fonction    
     def get_position(self):
         return self.x,self.y,self.orientation
+
+    def ballistic_shooting(self,distance, pos):
+        if pos > 0 and pos < 15:
+            ball_dis = 0.0345*distance - 0.4000
+            ball_dis = round(ball_dis)
+            self.elevation_part.run_timed(time_sp=ball_dis * 1000, speed_sp=20)
+
 
     # def distance_calculation(self,w):
     #     #Regression linéaire avec les données dans le data.csv
@@ -161,22 +165,24 @@ class Slave_Bot():
                     self.loop = False
                     self.position.stop()
                     self.elevation_part.run_timed(time_sp=1 * 1000, speed_sp=20)
+                    self.elev_pos = self.elev_pos - 1
                     
                 elif y > 104:
                     self.loop = False
                     self.position.stop()
                     self.elevation_part.run_timed(time_sp=1 * 1000, speed_sp=-20)
+                    self.elev_pos = self.elev_pos + 1 
                     
                 else:
                     if x < 140:
                         self.loop = False
-                        self.position.stop()
+
                         self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=40)
                         self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=-40)
 
                     elif x > 156:
                         self.loop = False
-                        self.position.stop()
+
                         self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=-40)
                         self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=40)
 
@@ -187,10 +193,11 @@ class Slave_Bot():
                         pos = self.get_position()
                         # spkr.speak('Target detected !')
                         # spkr.speak('Error calibration !')
-                        self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=40)
-                        self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=-40)
+                        # self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=40)
+                        # self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=-40)
 
                         self.elevation_part.run_timed(time_sp=1 * 1000, speed_sp=20)
+                        
                         # dis = self.distance_calculation(w)
                         # print("distance :", dis)
                         # print("largeur :", w)
@@ -203,23 +210,70 @@ class Slave_Bot():
                         self.shooting()
 
                         # self.loop = True
+            else:
+                sigs = 2
+                data = [174, 193, 32, 2, sigs, 1]                    
+                time.sleep(1)
+                bus.write_i2c_block_data(address, 0, data)
+                block = bus.read_i2c_block_data(address, 0, 20)
 
+                sigs = 1
+                data = [174, 193, 32, 2, sigs, 1]   
+
+                if block[6]==2:
+                    sig = block[7]*256 + block[6]
+                    x = block[9]*256 + block[8]
+                    y = block[11]*256 + block[10]
+                    w = block[13]*256 + block[12]
+                    h = block[15]*256 + block[14]
+
+                    if y < 95:
+                        self.loop = False
+                        self.position.stop()
+                        self.elevation_part.run_timed(time_sp=1 * 1000, speed_sp=20)
+                        self.elev_pos = self.elev_pos - 1
                         
+                    elif y > 104:
+                        self.loop = False
+                        self.position.stop()
+                        self.elevation_part.run_timed(time_sp=1 * 1000, speed_sp=-20)
+                        self.elev_pos = self.elev_pos + 1
                         
+                    else:
+                        if x < 140:
+                            self.loop = False
+                            self.position.stop()
+                            self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=40)
+                            self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=-40)
+
+                        elif x > 156:
+                            self.loop = False
+                            self.position.stop()
+                            self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=-40)
+                            self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=40)
+
+                        else:
+                            spkr = Sound()
+                            self.loop = False
+                            self.position.stop()
+                            pos = self.get_position()
+                            # spkr.speak('Target detected !')
+                            # spkr.speak('Error calibration !')
+                            # self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=40)
+                            # self.shooting_part_right.run_timed(time_sp=1 * 1000, speed_sp=-40)
+
+                            self.elevation_part.run_timed(time_sp=1 * 1000, speed_sp=20)
+                            # dis = self.distance_calculation(w)
+                            # print("distance :", dis)
+                            # print("largeur :", w)
+                            dis = w
+                            # print("hauteur :", h)
+                            dis = int(dis)
+                            dis = str(dis)
+                            data1 = dis.encode("utf8")
+                            self.s.send(data1)
+                            self.shooting()        
                 
-                #insert here call of function distance with x,y,w,h and pos inputs 
-
-    # communication, envoyer les données au master
-    # def send_data(self):
-    #     data = self.distance_calculation()
-    #     data = data.encode("utf8")
-    #     socket.sendall(data)
-    '''
-    def send_data(self):
-        spk = Sound()
-        spk.speak('Connection')
-        data = spk.encode("utf8")
-        socket.sendall(data)'''
 
     def shooting(self):
         # time.sleep(5000)
@@ -230,7 +284,9 @@ class Slave_Bot():
             
             if data_shooting is not None:
                 spk = Sound()
-                # spk.speak('Order received !')        
+                # spk.speak('Order received !')   
+                print("Shoot ",data_shooting, file = stderr)
+                self.ballistic_shooting(int(data_shooting),self.elev_pos)
                 self.shooting_part.run_timed(time_sp=3 * 1000, speed_sp=300)
                 time.sleep(1)
                 self.shooting_part.run_timed(time_sp=3 * 1000, speed_sp=-300)
