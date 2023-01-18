@@ -10,8 +10,8 @@ from threading import Thread
 #Faire une classe Slave Robot en prenant toutes les fonction du dessous
 class Master_Bot():
     def __init__(self):
-        self.hostAddress = '169.254.160.214' # The MAC address of a Bluetooth adapter on the server. The server might have multiple Bluetooth adapters.
-        self.port = 1052 # 3 is an arbitrary choice. However, it must match the port used by the client.
+        self.hostAddress = '169.254.33.135' # The MAC address of a Bluetooth adapter on the server. The server might have multiple Bluetooth adapters.
+        self.port = 1053 # 3 is an arbitrary choice. However, it must match the port used by the client.
         self.backlog = 1
         self.size = 1024
 
